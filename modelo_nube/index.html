@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <title>Modelos en la Nube - Estudio y Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; padding: 16px; }
+    
+    header { text-align: center; max-width: 460px; width: 100%; margin: 0 auto 12px; }
+    header h1 { font-size: 1.3rem; color: #38bdf8; margin-bottom: 12px; }
+    .tabs { display: flex; background: #1e293b; padding: 4px; border-radius: 12px; border: 1px solid #334155; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94a3b8; font-weight: bold; font-size: 0.95rem; border-radius: 9px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: #38bdf8; color: #0f172a; }
+
+    .view { display: none; flex: 1; flex-direction: column; max-width: 460px; width: 100%; margin: 0 auto; }
+    .view.active { display: flex; }
+
+    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 99px; margin: 8px 0 16px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #38bdf8; width: 16.6%; transition: width 0.3s ease; }
+    .slide-container { flex: 1; display: flex; align-items: center; }
+    .slide { background: #1e293b; border-radius: 20px; padding: 22px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: none; animation: fadeIn 0.25s ease; border: 1px solid #334155; }
+    .slide.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .badge { display: inline-block; background: #0284c7; color: #fff; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 99px; margin-bottom: 10px; text-transform: uppercase; }
+    .badge.green { background: #059669; }
+    h2 { font-size: 1.3rem; margin-bottom: 12px; color: #ffffff; }
+    ul { list-style: none; }
+    li { margin-bottom: 10px; font-size: 0.95rem; line-height: 1.45; color: #cbd5e1; padding-left: 16px; position: relative; }
+    li::before { content: "•"; color: #38bdf8; font-weight: bold; position: absolute; left: 0; }
+    strong { color: #f8fafc; }
+    .tip-box { background: #0f172a; border-left: 4px solid #38bdf8; padding: 12px; border-radius: 8px; margin-top: 14px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.4; }
+    .tip-box.green { border-left-color: #10b981; }
+    .controls { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+    .nav-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    .btn-prev { background: #334155; color: #f8fafc; }
+    .btn-next { background: #38bdf8; color: #0f172a; }
+    .nav-btn:disabled { opacity: 0.4; }
+    .counter { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 10px; }
+
+    .quiz-card { background: #1e293b; border-radius: 20px; padding: 22px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+    .q-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 16px; line-height: 1.4; color: #fff; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt-btn { width: 100%; text-align: left; padding: 14px; background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 12px; font-size: 0.94rem; cursor: pointer; transition: all 0.2s; }
+    .opt-btn.correct { background: #065f46; border-color: #10b981; color: #fff; font-weight: bold; }
+    .opt-btn.wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; }
+    .opt-btn:disabled { cursor: default; }
+    .feedback { margin-top: 14px; font-size: 0.9rem; padding: 12px; border-radius: 8px; display: none; background: #0f172a; color: #cbd5e1; line-height: 1.4; }
+    .quiz-next { width: 100%; margin-top: 16px; padding: 14px; background: #38bdf8; color: #0f172a; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; display: none; cursor: pointer; }
+    .score-box { text-align: center; padding: 20px 0; }
+    .score-num { font-size: 2.5rem; font-weight: bold; color: #38bdf8; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>☁️ Informática en la Nube</h1>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tab-slides" onclick="switchTab('slides')">📖 Diapositivas (6)</button>
+      <button type="button" class="tab-btn" id="tab-quiz" onclick="switchTab('quiz')">📝 Quiz (12)</button>
+    </div>
+  </header>
+
+  <section id="view-slides" class="view active">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="slide-container">
+      <!-- Diapositiva 1 -->
+      <div class="slide active">
+        <span class="badge">Introducción</span>
+        <h2>Los 3 Modelos Principales</h2>
+        <ul>
+          <li>Existen <strong>tres modelos</strong> de informática en la nube.</li>
+          <li>Cada uno representa una parte distinta de la <strong>pila tecnológica</strong>.</li>
+          <li>La diferencia clave está en <strong>cuánto control tienes</strong> frente a cuánto administra el proveedor.</li>
+        </ul>
+        <div class="tip-box">💡 <strong>Orden de mayor a menor control:</strong><br>IaaS ➔ PaaS ➔ SaaS</div>
+      </div>
+
+      <!-- Diapositiva 2 -->
+      <div class="slide">
+        <span class="badge">Teoría 1 de 3</span>
+        <h2>IaaS (Infraestructura como servicio)</h2>
+        <ul>
+          <li><strong>Qué es:</strong> Bloques básicos de TI (redes, servidores virtuales o dedicados y almacenamiento).</li>
+          <li><strong>Control:</strong> Ofrece el <strong>mayor nivel de flexibilidad</strong> y administración.</li>
+          <li><strong>Similitud:</strong> Es lo más parecido a los recursos físicos de un departamento de TI tradicional.</li>
+        </ul>
+        <div class="tip-box">🔑 <strong>Clave:</strong> Tú alquilas la base y administras todo lo que pones encima.</div>
+      </div>
+
+      <!-- Diapositiva 3 -->
+      <div class="slide">
+        <span class="badge green">Ejemplos Reales</span>
+        <h2>Servicios IaaS más usados</h2>
+        <ul>
+          <li><strong>Amazon EC2 (AWS):</strong> Máquinas virtuales donde eliges e instalas tu sistema operativo.</li>
+          <li><strong>Azure Virtual Machines:</strong> Servidores virtuales de Microsoft configurables desde cero.</li>
+          <li><strong>Google Compute Engine:</strong> Infraestructura de cómputo virtual en la red de Google.</li>
+          <li><strong>DigitalOcean / Amazon S3:</strong> Servidores virtuales y almacenamiento puro en la nube.</li>
+        </ul>
+        <div class="tip-box green">🛠️ <strong>En la práctica:</strong> Recibes un servidor vacío y tú instalas Windows/Linux y los parches.</div>
+      </div>
+
+      <!-- Diapositiva 4 -->
+      <div class="slide">
+        <span class="badge">Teoría 2 de 3</span>
+        <h2>PaaS (Plataforma como servicio)</h2>
+        <ul>
+          <li><strong>Qué elimina:</strong> La necesidad de gestionar hardware y sistemas operativos.</li>
+          <li><strong>Tu enfoque:</strong> Solo te encargas de <strong>implementar y administrar tus aplicaciones</strong>.</li>
+          <li><strong>Ventaja:</strong> Olvídate de parches, mantenimiento de software y capacidad.</li>
+        </ul>
+        <div class="tip-box">🔑 <strong>Clave:</strong> El proveedor cuida el entorno; tú solo te enfocas en tu aplicación.</div>
+      </div>
+
+      <!-- Diapositiva 5 -->
+      <div class="slide">
+        <span class="badge green">Ejemplos Reales</span>
+        <h2>Servicios PaaS más usados</h2>
+        <ul>
+          <li><strong>AWS Elastic Beanstalk:</strong> Subes tu código y AWS despliega y escala la app por ti.</li>
+          <li><strong>Google App Engine:</strong> Publica aplicaciones web sin administrar ningún servidor.</li>
+          <li><strong>Heroku / Render / Vercel:</strong> Subes código desde Git y tu app queda en línea en minutos.</li>
+          <li><strong>Azure App Service:</strong> Aloja aplicaciones web sin preocuparte por el sistema operativo.</li>
+        </ul>
+        <div class="tip-box green">🚀 <strong>En la práctica:</strong> Solo subes tu código; el proveedor actualiza y mantiene el servidor.</div>
+      </div>
+
+      <!-- Diapositiva 6 -->
+      <div class="slide">
+        <span class="badge">Teoría y Ejemplos 3 de 3</span>
+        <h2>SaaS (Software como servicio)</h2>
+        <ul>
+          <li><strong>Qué es:</strong> Producto completo que el proveedor ejecuta y administra por ti.</li>
+          <li><strong>Uso:</strong> Se refiere a <strong>aplicaciones de usuario final</strong> listas para usar.</li>
+          <li><strong>Ejemplos reales:</strong> Correo electrónico web (Gmail, Outlook), Google Workspace, Microsoft 365.</li>
+        </ul>
+        <div class="tip-box">🔑 <strong>Clave:</strong> No mantienes servidores ni código; solo usas el programa.</div>
+      </div>
+    </div>
+
+    <div class="counter" id="counter">Diapositiva 1 de 6</div>
+    <div class="controls">
+      <button type="button" class="nav-btn btn-prev" id="prevBtn" onclick="changeSlide(-1)" disabled>⬅️ Anterior</button>
+      <button type="button" class="nav-btn btn-next" id="nextBtn" onclick="changeSlide(1)">Siguiente ➡️</button>
+    </div>
+  </section>
+
+  <section id="view-quiz" class="view">
+    <div class="quiz-card" id="quiz-box"></div>
+  </section>
+
+  <script>
+    function switchTab(tabName) {
+      document.getElementById('tab-slides').classList.remove('active');
+      document.getElementById('tab-quiz').classList.remove('active');
+      document.getElementById('view-slides').classList.remove('active');
+      document.getElementById('view-quiz').classList.remove('active');
+
+      document.getElementById('tab-' + tabName).classList.add('active');
+      document.getElementById('view-' + tabName).classList.add('active');
+
+      if (tabName === 'quiz' && qIndex === 0 && !qAnswered) {
+        renderQuestion();
+      }
+    }
+
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const progress = document.getElementById('progress');
+    const counter = document.getElementById('counter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlideUI() {
+      for (let i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === current);
+      }
+      progress.style.width = ((current + 1) / slides.length) * 100 + '%';
+      counter.textContent = 'Diapositiva ' + (current + 1) + ' de ' + slides.length;
+      prevBtn.disabled = current === 0;
+      nextBtn.textContent = current === slides.length - 1 ? 'Reiniciar 🔄' : 'Siguiente ➡️';
+    }
+
+    function changeSlide(dir) {
+      if (dir === 1 && current === slides.length - 1) {
+        current = 0;
+      } else {
+        current = Math.max(0, Math.min(slides.length - 1, current + dir));
+      }
+      updateSlideUI();
+    }
+
+    let touchStartX = 0;
+    const slideView = document.getElementById('view-slides');
+    slideView.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+    slideView.addEventListener('touchend', function(e) {
+      let touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) changeSlide(1);
+      if (touchEndX - touchStartX > 50) changeSlide(-1);
+    }, {passive: true});
+
+    const questions = [
+      {
+        q: "1. ¿Qué modelo ofrece el mayor nivel de flexibilidad y control sobre tus recursos de TI?",
+        opts: ["SaaS (Software como servicio)", "PaaS (Plataforma como servicio)", "IaaS (Infraestructura como servicio)"],
+        ans: 2,
+        exp: "¡Exacto! IaaS te da los bloques básicos (redes, servidores y almacenamiento) para que tú los administres."
+      },
+      {
+        q: "2. ¿Qué servicio de AWS es un ejemplo clásico de IaaS porque te entrega máquinas virtuales configurables?",
+        opts: ["Amazon EC2", "AWS Elastic Beanstalk", "Gmail"],
+        ans: 0,
+        exp: "¡Correcto! Amazon EC2 te entrega servidores virtuales donde tú instalas y administras el sistema operativo."
+      },
+      {
+        q: "3. ¿Qué modelo elimina la necesidad de administrar hardware y sistemas operativos para enfocarte solo en tus aplicaciones?",
+        opts: ["PaaS (Plataforma como servicio)", "IaaS (Infraestructura como servicio)", "SaaS (Software como servicio)"],
+        ans: 0,
+        exp: "¡Muy bien! Con PaaS te olvidas del mantenimiento, parches y capacidad; solo gestionas tu aplicación."
+      },
+      {
+        q: "4. Plataformas como Heroku, Google App Engine y AWS Elastic Beanstalk pertenecen al modelo:",
+        opts: ["IaaS", "PaaS", "SaaS"],
+        ans: 1,
+        exp: "¡Exacto! Son plataformas PaaS donde solo subes tu código y el proveedor gestiona los servidores."
+      },
+      {
+        q: "5. Un correo electrónico basado en la web es un ejemplo común de:",
+        opts: ["IaaS", "PaaS", "SaaS"],
+        ans: 2,
+        exp: "¡Correcto! SaaS entrega un producto completo de usuario final donde el proveedor administra todo."
+      },
+      {
+        q: "6. ¿Cuál es el orden correcto de MAYOR a MENOR control por parte del usuario?",
+        opts: ["SaaS ➔ PaaS ➔ IaaS", "IaaS ➔ PaaS ➔ SaaS", "PaaS ➔ IaaS ➔ SaaS"],
+        ans: 1,
+        exp: "¡Así es! En IaaS controlas casi todo, en PaaS solo tus apps y en SaaS solo usas el software."
+      },
+      {
+        q: "7. Si necesitas elegir el sistema operativo (Linux o Windows) e instalar parches manualmente, ¿qué modelo usas?",
+        opts: ["SaaS", "PaaS", "IaaS"],
+        ans: 2,
+        exp: "¡Correcto! En IaaS (como Azure Virtual Machines o Google Compute Engine) tú administras el sistema operativo."
+      },
+      {
+        q: "8. ¿Cuáles son los tres bloques de creación fundamentales que ofrece IaaS?",
+        opts: ["Correo, documentos y hojas de cálculo", "Conexión en red, equipos (virtuales o dedicados) y almacenamiento", "Código fuente, parches y aplicaciones web"],
+        ans: 1,
+        exp: "¡Muy bien! Esos son los tres pilares fundamentales de la infraestructura en la nube."
+      },
+      {
+        q: "9. Si un programador sube su código desde Git a Render o Vercel sin configurar servidores, ¿qué modelo usa?",
+        opts: ["PaaS", "IaaS", "SaaS"],
+        ans: 0,
+        exp: "¡Exacto! Render, Vercel y Heroku son ejemplos modernos de PaaS."
+      },
+      {
+        q: "10. En el modelo SaaS, ¿de qué debe preocuparse el usuario final?",
+        opts: ["Del aprovisionamiento de recursos y capacidad", "De instalar parches en el servidor", "Únicamente de cómo utilizar el sistema de software"],
+        ans: 2,
+        exp: "¡Exacto! El proveedor se encarga de mantener el servicio y su infraestructura subyacente."
+      },
+      {
+        q: "11. ¿Qué servicios corresponden al almacenamiento puro dentro de la categoría IaaS?",
+        opts: ["Amazon S3 y Google Cloud Storage", "Microsoft 365 y Google Workspace", "Heroku y Azure App Service"],
+        ans: 0,
+        exp: "¡Correcto! Amazon S3 y Google Cloud Storage proveen infraestructura de almacenamiento de datos en la nube."
+      },
+      {
+        q: "12. ¿Qué modelo guarda el mayor parecido con los recursos de TI tradicionales en una empresa?",
+        opts: ["SaaS", "IaaS", "PaaS"],
+        ans: 1,
+        exp: "¡Excelente! IaaS es el más familiar para departamentos de TI tradicionales porque administran sus propios servidores."
+      }
+    ];
+
+    let qIndex = 0;
+    let score = 0;
+    let qAnswered = false;
+    const quizBox = document.getElementById('quiz-box');
+
+    function renderQuestion() {
+      qAnswered = false;
+      if (qIndex >= questions.length) {
+        quizBox.innerHTML =
+          '<div class="score-box">' +
+            '<span class="badge">Resultado Final</span>' +
+            '<h2>¡Quiz Completado!</h2>' +
+            '<div class="score-num">' + score + ' / ' + questions.length + '</div>' +
+            '<p style="color:#cbd5e1; margin-bottom:20px;">' + (score === questions.length ? '¡Dominas la teoría y los ejemplos reales! 🎉' : '¡Buen repaso! Puedes volver a intentarlo.') + '</p>' +
+            '<button type="button" class="nav-btn btn-next" style="width:100%" onclick="restartQuiz()">Volver a intentar 🔄</button>' +
+          '</div>';
+        return;
+      }
+
+      const item = questions[qIndex];
+      let optsHTML = '';
+      for (let i = 0; i < item.opts.length; i++) {
+        optsHTML += '<button type="button" class="opt-btn" onclick="checkAnswer(' + i + ', this)">' + item.opts[i] + '</button>';
+      }
+
+      quizBox.innerHTML =
+        '<span class="badge">Pregunta ' + (qIndex + 1) + ' de ' + questions.length + '</span>' +
+        '<div class="q-title">' + item.q + '</div>' +
+        '<div class="options">' + optsHTML + '</div>' +
+        '<div class="feedback" id="q-feedback">' + item.exp + '</div>' +
+        '<button type="button" class="quiz-next" id="q-next" onclick="nextQuestion()">Siguiente pregunta ➡️</button>';
+    }
+
+    function checkAnswer(selected, btn) {
+      if (qAnswered) return;
+      qAnswered = true;
+      const item = questions[qIndex];
+      const allBtns = document.querySelectorAll('.opt-btn');
+      for (let i = 0; i < allBtns.length; i++) {
+        allBtns[i].disabled = true;
+      }
+
+      if (selected === item.ans) {
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        allBtns[item.ans].classList.add('correct');
+      }
+
+      document.getElementById('q-feedback').style.display = 'block';
+      document.getElementById('q-next').style.display = 'block';
+    }
+
+    function nextQuestion() {
+      qIndex++;
+      renderQuestion();
+    }
+
+    function restartQuiz() {
+      qIndex = 0;
+      score = 0;
+      renderQuestion();
+    }
+  </script>
+</body>
+</html>
