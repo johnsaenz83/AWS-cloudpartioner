@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Práctica de Seguridad AWS - CLF-C02</title>
+    <style>
+        :root {
+            --aws-dark: #232f3e;
+            --aws-navy: #37475a;
+            --aws-orange: #ff9900;
+            --aws-blue: #0073bb;
+            --aws-light: #f2f3f3;
+            --text-main: #16191f;
+            --text-muted: #545b64;
+            --card-bg: #ffffff;
+            --success: #1d8102;
+            --danger: #d13212;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--aws-light);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-bottom: 40px;
+        }
+
+        header {
+            background-color: var(--aws-dark);
+            color: white;
+            padding: 18px 16px;
+            text-align: center;
+            border-bottom: 4px solid var(--aws-orange);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        header p {
+            font-size: 0.82rem;
+            color: #d5dbdb;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--aws-navy);
+            position: sticky;
+            top: 76px;
+            z-index: 99;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 6px;
+            border: none;
+            background: none;
+            color: #e1e4e8;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            border-bottom: 3px solid var(--aws-orange);
+            color: var(--aws-orange);
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 16px auto;
+            padding: 0 14px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            border: 1px solid #aab7b8;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--aws-orange);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: var(--aws-dark);
+        }
+
+        .badge {
+            background: #eaeded;
+            color: var(--aws-dark);
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .card-desc {
+            font-size: 0.92rem;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .box-block {
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 0.86rem;
+            margin-bottom: 8px;
+        }
+
+        .example-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            color: var(--text-muted);
+        }
+
+        .example-box strong {
+            color: var(--aws-dark);
+        }
+
+        .relation-box {
+            background: #f0f7fc;
+            border: 1px solid #cce5f6;
+            color: #1a4971;
+        }
+
+        .relation-box strong {
+            color: var(--aws-blue);
+        }
+
+        .keywords-box {
+            font-size: 0.8rem;
+            color: #545b64;
+            margin-top: 6px;
+        }
+
+        .keywords-box span {
+            display: inline-block;
+            background: #fff3e0;
+            color: #9e5600;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin: 2px 4px 2px 0;
+            font-weight: 600;
+        }
+
+        /* Flujo / Relaciones */
+        .flow-intro {
+            background: var(--aws-dark);
+            color: white;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .flow-intro h2 {
+            font-size: 1.05rem;
+            color: var(--aws-orange);
+            margin-bottom: 6px;
+        }
+
+        .flow-intro p {
+            font-size: 0.88rem;
+            color: #eaeded;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+            border-left: 4px solid var(--aws-blue);
+            position: relative;
+        }
+
+        .step-num {
+            display: inline-block;
+            background: var(--aws-blue);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+
+        .step-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--aws-dark);
+            margin-bottom: 4px;
+        }
+
+        .step-text {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .vs-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 18px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+        }
+
+        .vs-card h3 {
+            font-size: 1rem;
+            color: var(--aws-dark);
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--aws-orange);
+            padding-bottom: 6px;
+        }
+
+        .vs-item {
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeded;
+            font-size: 0.88rem;
+        }
+
+        .vs-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        /* Estilos del Test */
+        .quiz-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 0.96rem;
+            margin-bottom: 14px;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #d5dbdb;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #f2f3f3;
+        }
+
+        .option-btn.correct {
+            background: #e9f5e6;
+            border-color: var(--success);
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .option-btn.wrong {
+            background: #fdf2f0;
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.86rem;
+            display: none;
+            background: #f2f8fd;
+            border-left: 4px solid var(--aws-blue);
+        }
+
+        .reset-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: var(--aws-orange);
+            color: var(--aws-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .score-banner {
+            background: var(--aws-dark);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 16px;
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>AWS Security &amp; Marcos de Seguridad</h1>
+    <p>Ejemplos Prácticos, Relaciones y Test CLF-C02</p>
+</header>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('guia', this)">Servicios y Ejemplos</button>
+    <button class="tab-btn" onclick="switchTab('relaciones', this)">Cómo se Relacionan</button>
+    <button class="tab-btn" onclick="switchTab('test', this)">Test Examen</button>
+</div>
+
+<div class="container">
+    <!-- SECCIÓN 1: GUÍA DE ESTUDIO CON EJEMPLOS Y RELACIONES -->
+    <div id="guia" class="section active">
+        <input type="text" id="searchInput" class="search-box" placeholder="Buscar servicio, ejemplo o palabra clave..." onkeyup="filterCards()">
+        <div id="cardsContainer"></div>
+    </div>
+
+    <!-- SECCIÓN 2: CÓMO SE RELACIONAN EN LA PRÁCTICA -->
+    <div id="relaciones" class="section">
+        <div class="flow-intro">
+            <h2>Caso Real Integrado: Banco Digital en AWS</h2>
+            <p>Así es como trabajan en equipo todos estos marcos y servicios dentro de una misma arquitectura de producción:</p>
+        </div>
+
+        <div class="step-card">
+            <span class="step-num">Paso 1 · Estrategia (Antes de construir)</span>
+            <div class="step-title">AWS CAF (Cloud Adoption Framework)</div>
+            <div class="step-text">La directiva del banco usa la perspectiva de <strong>Seguridad del CAF</strong> para definir políticas de cumplimiento bancario, roles del equipo y controles obligatorios antes de migrar un solo servidor.</div>
+        </div>
+
+        <div class="step-card">
+            <span class="step-num">Paso 2 · Perímetro (Entrada de usuarios)</span>
+            <div class="step-title">AWS Shield + AWS WAF</div>
+            <div class="step-text">Cuando los clientes entran a la app web, <strong>Shield</strong> absorbe ataques masivos de red (DDoS) y <strong>WAF</strong> filtra intentos de inyección SQL o bots maliciosos antes de que lleguen al Application Load Balancer.</div>
+        </div>
+
+        <div class="step-card">
+            <span class="step-num">Paso 3 · Prevención interna (Servidores y Código)</span>
+            <div class="step-title">Amazon Inspector</div>
+            <div class="step-text">Mientras la app funciona, <strong>Inspector</strong> escanea continuamente las instancias EC2 y contenedores ECR. Avisa si una librería de Linux tiene un fallo crítico (CVE) para parcharla antes de que sea explotada.</div>
+        </div>
+
+        <div class="step-card">
+            <span class="step-num">Paso 4 · Detección activa (Comportamiento anómalo)</span>
+            <div class="step-title">Amazon GuardDuty</div>
+            <div class="step-text">Si un atacante logra robar una credencial y empieza a consultar datos desde un país extraño a las 3:00 AM, <strong>GuardDuty</strong> detecta la anomalía analizando logs de CloudTrail y VPC Flow Logs y dispara una alerta.</div>
+        </div>
+
+        <div class="step-card">
+            <span class="step-num">Paso 5 · Protección de Datos Sensibles</span>
+            <div class="step-title">Amazon Macie + AWS KMS</div>
+            <div class="step-text">Los estados de cuenta en PDF se guardan cifrados con claves de <strong>KMS</strong> en Amazon S3. <strong>Macie</strong> escanea los buckets para asegurar que nadie subió un archivo con números de tarjeta sin protección o en un bucket público.</div>
+        </div>
+
+        <div class="step-card">
+            <span class="step-num">Paso 6 · Centro de Mando Unificado</span>
+            <div class="step-title">AWS Security Hub</div>
+            <div class="step-text">El equipo de seguridad no entra a 5 consolas distintas: <strong>Security Hub</strong> recoge las alertas de GuardDuty, Inspector y Macie en un solo panel y mide si cumplen con normativas internacionales (PCI-DSS, CIS).</div>
+        </div>
+
+        <div class="vs-card">
+            <h3>Comparativa Rápida para No Confundirlos</h3>
+            <div class="vs-item">
+                <strong>AWS CAF vs. AWS Well-Architected Framework:</strong><br>
+                El <em>CAF</em> guía a la <strong>organización y personas</strong> para adoptar la nube. El <em>Well-Architected</em> evalúa la <strong>arquitectura técnica</strong> de una carga de trabajo ya construida.
+            </div>
+            <div class="vs-item">
+                <strong>Amazon Inspector vs. Amazon GuardDuty:</strong><br>
+                <em>Inspector</em> busca <strong>debilidades conocidas</strong> (software desactualizado, puertos abiertos) antes del ataque. <em>GuardDuty</em> detecta <strong>comportamientos maliciosos activos</strong> (intrusiones, minería de criptomonedas) analizando tráfico y logs.
+            </div>
+            <div class="vs-item">
+                <strong>AWS WAF vs. AWS Shield:</strong><br>
+                <em>WAF</em> inspecciona el contenido de peticiones web (Capa 7: SQLi, XSS, bloqueo por país). <em>Shield</em> protege contra inundaciones de tráfico volumétrico (Capas 3/4 y 7: ataques DDoS).
+            </div>
+            <div class="vs-item">
+                <strong>AWS CloudTrail vs. AWS Config:</strong><br>
+                <em>CloudTrail</em> registra <strong>quién hizo qué acción</strong> (llamadas a la API). <em>Config</em> registra <strong>cómo cambió la configuración</strong> de un recurso a lo largo del tiempo.
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3: TEST PRÁCTICO -->
+    <div id="test" class="section">
+        <div class="score-banner" id="scoreDisplay">Puntuación: 0 aciertos de 0 respondidas</div>
+        <div id="quizContainer"></div>
+        <button class="reset-btn" onclick="renderQuiz()">Reiniciar Test</button>
+    </div>
+</div>
+
+<script>
+    const securityConcepts = [
+        {
+            name: "AWS CAF (Cloud Adoption Framework)",
+            category: "Marco Estratégico",
+            desc: "Metodología de AWS que ayuda a las organizaciones a planificar su transición a la nube mediante 6 perspectivas: Negocio, Personas, Gobernanza, Plataforma, Seguridad y Operaciones.",
+            example: "Una empresa tradicional crea su plan de migración a 12 meses usando la perspectiva de Seguridad del CAF para definir cómo gestionará identidades y auditorías antes de mover sus datos.",
+            relation: "Establece las políticas de alto nivel que luego se implementan técnicamente con servicios como IAM, Security Hub y GuardDuty.",
+            keywords: ["Planificación", "Migración organizacional", "6 perspectivas"]
+        },
+        {
+            name: "AWS Well-Architected Framework",
+            category: "Marco Técnico",
+            desc: "Guía de mejores prácticas para diseñar y evaluar arquitecturas técnicas en la nube basadas en 6 pilares, siendo la Seguridad uno de los principales.",
+            example: "Un arquitecto revisa una aplicación en producción con la herramienta AWS Well-Architected Tool y descubre que le falta cifrado en reposo y rotación automática de claves.",
+            relation: "Complementa al CAF: mientras el CAF prepara a la empresa, Well-Architected valida que las aplicaciones técnicas estén bien construidas.",
+            keywords: ["6 pilares", "Mejores prácticas", "Revisión técnica"]
+        },
+        {
+            name: "AWS WAF (Web Application Firewall)",
+            category: "Protección Web",
+            desc: "Firewall de aplicaciones web (Capa 7) que filtra peticiones HTTP/HTTPS maliciosas antes de que alcancen tu aplicación.",
+            example: "Bloquear ataques de inyección SQL en el formulario de login de una tienda online o impedir el acceso desde direcciones IP de países donde la empresa no opera.",
+            relation: "Se asocia directamente a Amazon CloudFront, Application Load Balancer (ALB) o API Gateway, y trabaja junto con AWS Shield.",
+            keywords: ["Inyección SQL", "XSS", "Capa 7", "CloudFront / ALB"]
+        },
+        {
+            name: "AWS Shield",
+            category: "Protección DDoS",
+            desc: "Servicio gestionado de protección contra ataques de Denegación de Servicio Distribuido (DDoS). Standard es gratuito y automático; Advanced ofrece mitigación avanzada y soporte 24/7.",
+            example: "Un sitio de venta de entradas recibe millones de peticiones falsas simultáneas para tumbar el servidor; Shield absorbe el ataque sin afectar a los compradores reales.",
+            relation: "Protege la disponibilidad de red junto con AWS WAF (capa de aplicación) y Amazon Route 53.",
+            keywords: ["Ataques DDoS", "Standard gratuito", "Disponibilidad"]
+        },
+        {
+            name: "Amazon GuardDuty",
+            category: "Detección de Amenazas",
+            desc: "Servicio inteligente que utiliza Machine Learning para monitorear continuamente logs y detectar actividades maliciosas o compromisos de seguridad sin instalar agentes.",
+            example: "Detectar que una instancia EC2 está enviando datos a una IP conocida de comando y control (malware) o que un usuario IAM inició sesión desde dos continentes en 10 minutos.",
+            relation: "Analiza datos de AWS CloudTrail, VPC Flow Logs y DNS Logs, y envía sus alertas directamente a AWS Security Hub.",
+            keywords: ["Machine Learning", "Comportamiento anómalo", "Logs sin agentes"]
+        },
+        {
+            name: "Amazon Inspector",
+            category: "Vulnerabilidades",
+            desc: "Servicio automatizado que escanea instancias EC2, imágenes de contenedores en ECR y funciones Lambda en busca de vulnerabilidades de software (CVE) y exposiciones de red.",
+            example: "Escanear automáticamente 50 servidores EC2 cada vez que sale un parche nuevo y alertar cuáles tienen una versión vulnerable de Apache o puertos SSH abiertos a internet.",
+            relation: "A diferencia de GuardDuty (que busca intrusiones activas), Inspector busca fallos de software preventivos y envía los hallazgos a Security Hub.",
+            keywords: ["CVE", "Escaneo EC2 y ECR", "Parches y software"]
+        },
+        {
+            name: "AWS Security Hub",
+            category: "Centralización",
+            desc: "Panel centralizado que recopila, normaliza y prioriza alertas de múltiples servicios de seguridad, además de realizar comprobaciones automáticas de cumplimiento normativo.",
+            example: "Un equipo de seguridad revisa un único tablero donde ve juntas las alertas críticas de GuardDuty, los fallos detectados por Inspector y el puntaje de cumplimiento CIS.",
+            relation: "Es el punto de encuentro donde convergen GuardDuty, Inspector, Macie, Firewall Manager y soluciones de terceros.",
+            keywords: ["Panel único", "Cumplimiento CIS / PCI", "Agregador de alertas"]
+        },
+        {
+            name: "Amazon Macie",
+            category: "Protección de Datos",
+            desc: "Servicio impulsado por Machine Learning que descubre, clasifica y protege información confidencial almacenada en buckets de Amazon S3.",
+            example: "Analizar miles de archivos subidos por empleados a S3 y alertar si un archivo contiene números de tarjetas de crédito, pasaportes o datos médicos (PII).",
+            relation: "Protege específicamente los datos en Amazon S3 y reporta los hallazgos de exposición a AWS Security Hub.",
+            keywords: ["Datos sensibles / PII", "Amazon S3", "Machine Learning"]
+        },
+        {
+            name: "AWS KMS (Key Management Service)",
+            category: "Cifrado",
+            desc: "Servicio gestionado para crear, rotar y controlar las claves criptográficas utilizadas para cifrar datos en reposo y en tránsito.",
+            example: "Configurar que todos los volúmenes EBS y bases de datos RDS se cifren automáticamente con una clave administrada que rota cada año.",
+            relation: "Se integra de forma nativa con S3, EBS, RDS y Secrets Manager para proteger los datos que Macie o Config auditan.",
+            keywords: ["Claves de cifrado", "Datos en reposo", "Rotación de claves"]
+        },
+        {
+            name: "AWS CloudTrail y AWS Config",
+            category: "Auditoría y Cumplimiento",
+            desc: "CloudTrail registra toda actividad y llamadas a la API en tu cuenta (quién hizo qué). Config evalúa y registra el historial de configuración de los recursos.",
+            example: "Si alguien borra una base de datos RDS, CloudTrail dice qué usuario ejecutó la orden y desde qué IP; Config muestra cómo estaba configurado ese recurso antes.",
+            relation: "CloudTrail alimenta de registros a GuardDuty para detectar amenazas, mientras Config verifica reglas de cumplimiento para Security Hub.",
+            keywords: ["Auditoría API (CloudTrail)", "Historial de configuración (Config)"]
+        }
+    ];
+
+    const examQuestions = [
+        {
+            q: "Una empresa de comercio electrónico quiere bloquear ataques de inyección SQL y tráfico malicioso procedente de ciertas regiones geográficas antes de que lleguen a su Application Load Balancer. ¿Qué servicio debe implementar?",
+            options: ["Amazon GuardDuty", "AWS WAF", "Amazon Inspector", "AWS KMS"],
+            answer: 1,
+            explanation: "AWS WAF filtra peticiones HTTP/HTTPS en capa 7, permitiendo crear reglas contra inyección SQL, XSS y bloqueos geográficos."
+        },
+        {
+            q: "¿Cuál es la diferencia principal entre Amazon Inspector y Amazon GuardDuty?",
+            options: [
+                "Inspector cifra bases de datos y GuardDuty bloquea ataques DDoS",
+                "Inspector escanea software y contenedores en busca de vulnerabilidades (CVE); GuardDuty analiza logs para detectar amenazas activas y comportamientos anómalos",
+                "Inspector funciona solo en S3 y GuardDuty solo en EC2",
+                "GuardDuty es un marco estratégico y Inspector es un servicio técnico"
+            ],
+            answer: 1,
+            explanation: "Inspector evalúa debilidades internas (vulnerabilidades de software/red en EC2, ECR, Lambda), mientras GuardDuty monitorea logs (CloudTrail, VPC Flow Logs, DNS) con Machine Learning para detectar actividad maliciosa."
+        },
+        {
+            q: "Un equipo de seguridad necesita una vista única y centralizada para gestionar las alertas provenientes de Amazon GuardDuty, Amazon Inspector y Amazon Macie, además de auditar el cumplimiento frente a estándares de la industria. ¿Qué servicio debe usar?",
+            options: ["AWS Security Hub", "AWS CAF", "AWS Shield Advanced", "AWS Artifact"],
+            answer: 0,
+            explanation: "AWS Security Hub centraliza, normaliza y prioriza hallazgos de múltiples servicios de seguridad en un solo panel y evalúa estándares como CIS."
+        },
+        {
+            q: "Una empresa financiera almacena millones de documentos de clientes en buckets de Amazon S3 y necesita identificar automáticamente cuáles contienen información personal identificable (PII) o números de tarjetas de crédito expuestos. ¿Qué servicio resuelve este caso?",
+            options: ["Amazon Inspector", "AWS WAF", "Amazon Macie", "AWS Config"],
+            answer: 2,
+            explanation: "Amazon Macie utiliza Machine Learning para descubrir y clasificar datos sensibles (PII, datos financieros) dentro de Amazon S3."
+        },
+        {
+            q: "Una organización está planificando su migración a la nube y quiere alinear a sus equipos de negocio, gobernanza y seguridad mediante un marco estructurado de perspectivas antes de desplegar cargas de trabajo. ¿Qué recurso de AWS debe utilizar?",
+            options: [
+                "AWS Cloud Adoption Framework (CAF)",
+                "Amazon GuardDuty",
+                "AWS Shield Standard",
+                "AWS Security Hub"
+            ],
+            answer: 0,
+            explanation: "AWS CAF proporciona una guía estratégica dividida en 6 perspectivas (incluyendo Seguridad y Gobernanza) para ayudar a las organizaciones a planificar su adopción de la nube."
+        },
+        {
+            q: "Un administrador descubre que un grupo de seguridad (Security Group) fue modificado anoche abriendo el puerto 22 a todo internet, y quiere saber exactamente qué usuario IAM realizó ese cambio. ¿Qué servicio debe consultar?",
+            options: ["AWS CloudTrail", "Amazon Macie", "AWS Shield", "AWS WAF"],
+            answer: 0,
+            explanation: "AWS CloudTrail registra todas las llamadas a la API y acciones realizadas en la cuenta, permitiendo auditar quién hizo qué cambio, cuándo y desde dónde."
+        },
+        {
+            q: "¿Qué combinación de servicios ofrece protección automática contra ataques DDoS a nivel de red/transporte y filtrado de amenazas web a nivel de aplicación para una distribución de Amazon CloudFront?",
+            options: [
+                "Amazon Inspector y AWS KMS",
+                "AWS Shield y AWS WAF",
+                "Amazon Macie y AWS Config",
+                "AWS CAF y Amazon GuardDuty"
+            ],
+            answer: 1,
+            explanation: "AWS Shield protege contra ataques volumétricos DDoS y AWS WAF filtra tráfico web malicioso en capa 7; juntos forman la defensa perimetral estándar en CloudFront y ALB."
+        },
+        {
+            q: "Una empresa necesita asegurarse de que las imágenes de contenedores almacenadas en Amazon ECR no contengan vulnerabilidades conocidas antes de desplegarlas en producción. ¿Qué servicio debe activar?",
+            options: ["Amazon Inspector", "AWS CloudTrail", "AWS WAF", "Amazon Macie"],
+            answer: 0,
+            explanation: "Amazon Inspector escanea automáticamente tanto instancias EC2 como imágenes de contenedores en Amazon ECR y funciones AWS Lambda en busca de vulnerabilidades."
+        }
+    ];
+
+    let score = 0;
+    let answeredCount = 0;
+
+    function renderCards(filter = "") {
+        const container = document.getElementById("cardsContainer");
+        container.innerHTML = "";
+        const term = filter.toLowerCase();
+
+        securityConcepts
+            .filter(item =>
+                item.name.toLowerCase().includes(term) ||
+                item.desc.toLowerCase().includes(term) ||
+                item.example.toLowerCase().includes(term) ||
+                item.relation.toLowerCase().includes(term) ||
+                item.keywords.some(k => k.toLowerCase().includes(term))
+            )
+            .forEach(item => {
+                const kwHtml = item.keywords.map(k => `<span>${k}</span>`).join("");
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${item.name}</span>
+                            <span class="badge">${item.category}</span>
+                        </div>
+                        <p class="card-desc">${item.desc}</p>
+                        <div class="box-block example-box">
+                            <strong>Ejemplo práctico:</strong> ${item.example}
+                        </div>
+                        <div class="box-block relation-box">
+                            <strong>Relación con otros servicios:</strong> ${item.relation}
+                        </div>
+                        <div class="keywords-box">
+                            Claves examen: ${kwHtml}
+                        </div>
+                    </div>
+                `;
+            });
+    }
+
+    function filterCards() {
+        const input = document.getElementById("searchInput").value;
+        renderCards(input);
+    }
+
+    function renderQuiz() {
+        score = 0;
+        answeredCount = 0;
+        updateScore();
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        examQuestions.forEach((qItem, qIndex) => {
+            let optionsHtml = "";
+            qItem.options.forEach((opt, oIndex) => {
+                optionsHtml += `<button class="option-btn" id="q${qIndex}-o${oIndex}" onclick="checkAnswer(${qIndex}, ${oIndex})">${opt}</button>`;
+            });
+
+            container.innerHTML += `
+                <div class="quiz-card">
+                    <div class="question-text">${qIndex + 1}. ${qItem.q}</div>
+                    ${optionsHtml}
+                    <div class="feedback" id="feedback-${qIndex}">
+                        <strong>Explicación:</strong> ${qItem.explanation}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function checkAnswer(qIndex, selectedOption) {
+        const qItem = examQuestions[qIndex];
+        const feedbackEl = document.getElementById(`feedback-${qIndex}`);
+        
+        qItem.options.forEach((_, idx) => {
+            const btn = document.getElementById(`q${qIndex}-o${idx}`);
+            btn.disabled = true;
+            if (idx === qItem.answer) {
+                btn.classList.add("correct");
+            } else if (idx === selectedOption) {
+                btn.classList.add("wrong");
+            }
+        });
+
+        if (selectedOption === qItem.answer) {
+            score++;
+        }
+        answeredCount++;
+        updateScore();
+        feedbackEl.style.display = "block";
+    }
+
+    function updateScore() {
+        document.getElementById("scoreDisplay").innerText = `Puntuación: ${score} aciertos de ${answeredCount} respondidas (Total: ${examQuestions.length})`;
+    }
+
+    function switchTab(tabName, btnEl) {
+        document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        
+        document.getElementById(tabName).classList.add("active");
+        btnEl.classList.add("active");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    renderCards();
+    renderQuiz();
+</script>
+
+</body>
+</html>
