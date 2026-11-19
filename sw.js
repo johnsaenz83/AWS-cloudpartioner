@@ -6,9 +6,9 @@ const CORE_ASSETS = [
   './index.html',
   './manifest.json',
   './caf_r7.html',
-  './escalabilidad_2.html',
-  './modelonube_2.html',
-  './seguridad_2.html',
+  './escalabilidad.html',
+  './modelonube.html',
+  './seguridad.html',
   './iam_responsabilidad.html'
 ];
 
