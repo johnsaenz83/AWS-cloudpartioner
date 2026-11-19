@@ -1,0 +1,15 @@
+[build]
+  publish = "."
+
+# Cabeceras de seguridad y optimización de caché
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+
+# Caché agresiva para archivos estáticos (HTML, JS, CSS)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
