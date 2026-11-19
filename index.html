@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="AWS CLF-C02" />
-  <link rel="manifest" href="manifest.json" />
   <title>AWS CLF-C02 • Mapa de Dominios y Progreso</title>
   <style>
     :root {
@@ -386,12 +385,6 @@
         return;
       }
       document.getElementById('shortcutModal').classList.add('open');
-    }
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      });
     }
 
     renderTree();
