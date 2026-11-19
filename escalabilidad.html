@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <title>Guía Cloud Practitioner: Escalabilidad y Alta Disponibilidad (Offline)</title>
   <style>
     :root {
@@ -511,26 +511,6 @@ function switchTab(sectionId, btn) {
 
 // 3. SIMULADOR GRÁFICO ANIMADO (CANVAS)
 
-// Pausar animación de canvas si la pestaña no está activa (Optimización para móviles)
-let isPageVisible = true;
-document.addEventListener("visibilitychange", () => {
-  isPageVisible = !document.hidden;
-});
-
-function animateSim() {
-  if (!isPageVisible) {
-    requestAnimationFrame(animateSim);
-    return; // No consume CPU si el usuario no está viendo la pantalla
-  }
-  
-  simState.tick++;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // ... (tu lógica de dibujo existente) ...
-
-  requestAnimationFrame(animateSim);
-}
-
 const canvas = document.getElementById('archCanvas');
 const ctx = canvas.getContext('2d');
 let simState = {
@@ -609,7 +589,22 @@ function drawRoundedBox(x, y, w, h, borderColor, fillColor, title, sub, loadPct,
   ctx.restore();
 }
 
+// Pausar animación de canvas si la pestaña no está activa (Optimización para móviles)
+let isPageVisible = !document.hidden;
+document.addEventListener("visibilitychange", () => {
+  isPageVisible = !document.hidden;
+});
+
 function animateSim() {
+  const simSection = document.getElementById('sec-sim');
+  const isSimActive = simSection && simSection.classList.contains('active');
+
+  if (!isPageVisible || !isSimActive) {
+    requestAnimationFrame(animateSim);
+    return;
+  }
+
+   // function animateSim() {
   simState.tick++;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
