@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Escalabilidad y Alta Disponibilidad - AWS CLF-C02</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; padding: 16px; }
+    
+    header { text-align: center; max-width: 460px; width: 100%; margin: 0 auto 12px; }
+    header h1 { font-size: 1.15rem; color: #38bdf8; margin-bottom: 12px; }
+    .tabs { display: flex; background: #1e293b; padding: 4px; border-radius: 12px; border: 1px solid #334155; }
+    .tab-btn { flex: 1; padding: 10px 4px; border: none; background: transparent; color: #94a3b8; font-weight: bold; font-size: 0.85rem; border-radius: 9px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: #38bdf8; color: #0f172a; }
+
+    .view { display: none; flex: 1; flex-direction: column; max-width: 460px; width: 100%; margin: 0 auto; }
+    .view.active { display: flex; }
+
+    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 99px; margin: 8px 0 16px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #38bdf8; width: 14.2%; transition: width 0.3s ease; }
+    .slide-container { flex: 1; display: flex; align-items: center; }
+    .slide { background: #1e293b; border-radius: 20px; padding: 22px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: none; animation: fadeIn 0.25s ease; border: 1px solid #334155; }
+    .slide.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .badge { display: inline-block; background: #0284c7; color: #fff; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 99px; margin-bottom: 10px; text-transform: uppercase; }
+    .badge.green { background: #059669; }
+    h2 { font-size: 1.15rem; margin-bottom: 12px; color: #ffffff; }
+    ul { list-style: none; }
+    li { margin-bottom: 9px; font-size: 0.88rem; line-height: 1.4; color: #cbd5e1; padding-left: 16px; position: relative; }
+    li::before { content: "•"; color: #38bdf8; font-weight: bold; position: absolute; left: 0; }
+    strong { color: #f8fafc; }
+    .tip-box { background: #0f172a; border-left: 4px solid #38bdf8; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 0.83rem; color: #e2e8f0; line-height: 1.4; }
+    .tip-box.green { border-left-color: #10b981; }
+    .controls { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+    .nav-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; }
+    .btn-prev { background: #334155; color: #f8fafc; }
+    .btn-next { background: #38bdf8; color: #0f172a; }
+    .nav-btn:disabled { opacity: 0.4; }
+    .counter { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 10px; }
+
+    .quiz-card { background: #1e293b; border-radius: 20px; padding: 22px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+    .q-title { font-size: 1rem; font-weight: bold; margin-bottom: 14px; line-height: 1.4; color: #fff; }
+    .options { display: flex; flex-direction: column; gap: 8px; }
+    .opt-btn { width: 100%; text-align: left; padding: 12px; background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 12px; font-size: 0.87rem; cursor: pointer; transition: all 0.2s; }
+    .opt-btn.correct { background: #065f46; border-color: #10b981; color: #fff; font-weight: bold; }
+    .opt-btn.wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; }
+    .opt-btn:disabled { cursor: default; }
+    .feedback { margin-top: 12px; font-size: 0.85rem; padding: 10px; border-radius: 8px; display: none; background: #0f172a; color: #cbd5e1; line-height: 1.4; }
+    .quiz-next { width: 100%; margin-top: 14px; padding: 14px; background: #38bdf8; color: #0f172a; border: none; border-radius: 12px; font-weight: bold; font-size: 0.95rem; display: none; cursor: pointer; }
+    .score-box { text-align: center; padding: 20px 0; }
+    .score-num { font-size: 2.5rem; font-weight: bold; color: #38bdf8; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>📈 Escalabilidad y Alta Disponibilidad</h1>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tab-slides" onclick="switchTab('slides')">📖 Diapositivas (7)</button>
+      <button type="button" class="tab-btn" id="tab-quiz" onclick="switchTab('quiz')">📝 Quiz (10)</button>
+    </div>
+  </header>
+
+  <section id="view-slides" class="view active">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="slide-container">
+      
+      <!-- Diapositiva 1 -->
+      <div class="slide active">
+        <span class="badge">Pilares AWS</span>
+        <h2>Escalabilidad y Well-Architected</h2>
+        <ul>
+          <li><strong>Fiabilidad (Reliability):</strong> Recuperación automática ante fallos y distribución multizona.</li>
+          <li><strong>Eficiencia de Rendimiento:</strong> Uso óptimo de recursos según la demanda en tiempo real.</li>
+          <li><strong>Optimización de Costos:</strong> Pagar solo por lo que se usa (Scale-in cuando baja el tráfico).</li>
+        </ul>
+        <div class="tip-box">🏛️ <strong>Enfoque CLF-C02:</strong> Conectar la elasticidad con los 6 pilares de diseño de AWS.</div>
+      </div>
+
+      <!-- Diapositiva 2 -->
+      <div class="slide">
+        <span class="badge green">Pilares 4, 5 y 6</span>
+        <h2>Excelencia, Seguridad y Sostenibilidad</h2>
+        <ul>
+          <li><strong>Excelencia Operativa:</strong> Automatización de despliegues y monitoreo constante.</li>
+          <li><strong>Seguridad:</strong> Aislamiento de capas de red y cifrado en tránsito/reposo.</li>
+          <li><strong>Sostenibilidad:</strong> Reducción de la huella energética apagando recursos ociosos.</li>
+        </ul>
+        <div class="tip-box green">🌱 <strong>Clave:</strong> Auto Scaling contribuye directamente a la sostenibilidad al no mantener servidores vacíos encendidos.</div>
+      </div>
+
+      <!-- Diapositiva 3 -->
+      <div class="slide">
+        <span class="badge">Arquitectura Real</span>
+        <h2>Flujo por Capas: Entrada y Cómputo</h2>
+        <ul>
+          <li><strong>Route 53 (DNS):</strong> Enruta el tráfico globalmente con alta disponibilidad (Anycast).</li>
+          <li><strong>CloudFront (CDN):</strong> Caché perimetral para entregar contenido estático cerca del usuario.</li>
+          <li><strong>ALB (Application Load Balancer):</strong> Distribuye solicitudes HTTP/HTTPS entre múltiples servidores.</li>
+          <li><strong>ASG (Auto Scaling Group):</strong> Añade o elimina servidores de cómputo (EC2) de forma elástica.</li>
+        </ul>
+        <div class="tip-box">⚡ <strong>Estrategia:</strong> Las instancias EC2 son *stateless* (sin estado local) para escalar horizontalmente sin fricción.</div>
+      </div>
+
+      <!-- Diapositiva 4 -->
+      <div class="slide">
+        <span class="badge green">Arquitectura Real</span>
+        <h2>Flujo por Capas: Datos y Desacoplamiento</h2>
+        <ul>
+          <li><strong>ElastiCache (Caché):</strong> Almacena datos en memoria (Redis/Memcached) para aliviar bases de datos.</li>
+          <li><strong>SQS (Simple Queue Service) y SNS (Simple Notification Service):</strong> Desacoplan microservicios mediante colas y notificaciones asíncronas.</li>
+          <li><strong>RDS Multi-AZ / DynamoDB:</strong> Escalado de bases de datos relacionales y NoSQL altamente disponibles.</li>
+        </ul>
+        <div class="tip-box green">🔄 <strong>Desacoplamiento:</strong> SQS evita la pérdida de peticiones si una capa de procesamiento se satura temporalmente.</div>
+      </div>
+
+      <!-- Diapositiva 5 -->
+      <div class="slide">
+        <span class="badge">Patrones de Tráfico</span>
+        <h2>Escalar Lecturas vs. Escrituras</h2>
+        <ul>
+          <li><strong>Lecturas masivas:</strong> Se resuelven con <strong>CloudFront</strong> (periferia), <strong>ElastiCache</strong> (memoria) y <strong>RDS Read Replicas</strong> (réplicas de lectura).</li>
+          <li><strong>Escrituras y Procesamiento:</strong> Se gestionan mediante colas asíncronas (**SQS**), escalado horizontal de cómputo (**Auto Scaling**) y bases de datos NoSQL distribuidas (**DynamoDB**).</li>
+        </ul>
+        <div class="tip-box">⚖️ <strong>Diferencia clave:</strong> Las lecturas se multiplican fácilmente duplicando copias; las escrituras requieren consistencia y control de concurrencia.</div>
+      </div>
+
+      <!-- Diapositiva 6 -->
+      <div class="slide">
+        <span class="badge green">Conceptos Clave</span>
+        <h2>Escalabilidad Vertical vs. Horizontal</h2>
+        <ul>
+          <li><strong>Vertical (Scale Up/Down):</strong> Cambiar el tamaño del servidor (ej. pasar de una instancia pequeña a una gigante). Límite físico.</li>
+          <li><strong>Horizontal (Scale Out/In):</strong> Añadir más servidores idénticos trabajando en equipo (Patrón nativo de la nube).</li>
+          <li><strong>Alta Disponibilidad (HA):</strong> Distribuir recursos en múltiples Zonas de Disponibilidad (AZs) para tolerar caídas de centros de datos completos.</li>
+        </ul>
+        <div class="tip-box green">🌐 <strong>HA + Elasticidad:</strong> La base del diseño moderno en AWS es combinar múltiples AZs con grupos de Auto Scaling.</div>
+      </div>
+
+      <!-- Diapositiva 7 -->
+      <div class="slide">
+        <span class="badge">Resumen Técnico</span>
+        <h2>Glosario de Acrónimos CLF-C02</h2>
+        <ul>
+          <li><strong>ALB:</strong> Application Load Balancer.</li>
+          <li><strong>ASG:</strong> Auto Scaling Group.</li>
+          <li><strong>CDN:</strong> Content Delivery Network (CloudFront).</li>
+          <li><strong>AZ:</strong> Availability Zone (Zona de Disponibilidad).</li>
+          <li><strong>RDS:</strong> Relational Database Service.</li>
+        </ul>
+        <div class="tip-box">🎯 <strong>Preparación:</strong> Listos para el quiz de 10 escenarios técnicos reales.</div>
+      </div>
+
+    </div>
+
+    <div class="counter" id="counter">Diapositiva 1 de 7</div>
+    <div class="controls">
+      <button type="button" class="nav-btn btn-prev" id="prevBtn" onclick="changeSlide(-1)" disabled>⬅️ Anterior</button>
+      <button type="button" class="nav-btn btn-next" id="nextBtn" onclick="changeSlide(1)">Siguiente ➡️</button>
+    </div>
+  </section>
+
+  <section id="view-quiz" class="view">
+    <div class="quiz-card" id="quiz-box"></div>
+  </section>
+
+  <script>
+    function switchTab(tabName) {
+      document.getElementById('tab-slides').classList.remove('active');
+      document.getElementById('tab-quiz').classList.remove('active');
+      document.getElementById('view-slides').classList.remove('active');
+      document.getElementById('view-quiz').classList.remove('active');
+
+      document.getElementById('tab-' + tabName).classList.add('active');
+      document.getElementById('view-' + tabName).classList.add('active');
+
+      if (tabName === 'quiz' && qIndex === 0 && !qAnswered) {
+        renderQuestion();
+      }
+    }
+
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const progress = document.getElementById('progress');
+    const counter = document.getElementById('counter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlideUI() {
+      for (let i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === current);
+      }
+      progress.style.width = ((current + 1) / slides.length) * 100 + '%';
+      counter.textContent = 'Diapositiva ' + (current + 1) + ' de ' + slides.length;
+      prevBtn.disabled = current === 0;
+      nextBtn.textContent = current === slides.length - 1 ? 'Reiniciar 🔄' : 'Siguiente ➡️';
+    }
+
+    function changeSlide(dir) {
+      if (dir === 1 && current === slides.length - 1) {
+        current = 0;
+      } else {
+        current = Math.max(0, Math.min(slides.length - 1, current + dir));
+      }
+      updateSlideUI();
+    }
+
+    let touchStartX = 0;
+    const slideView = document.getElementById('view-slides');
+    slideView.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+    slideView.addEventListener('touchend', function(e) {
+      let touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) changeSlide(1);
+      if (touchEndX - touchStartX > 50) changeSlide(-1);
+    }, {passive: true});
+
+    const questions = [
+      {
+        q: "1. Una aplicación web en Amazon EC2 experimenta picos masivos de tráfico de lectura en su catálogo de productos. ¿Qué servicio optimiza mejor el rendimiento y alivia la base de datos?",
+        opts: ["Añadir más discos EBS de almacenamiento", "Implementar Amazon ElastiCache para almacenar consultas frecuentes en memoria", "Configurar una cola SQS adicional"],
+        ans: 1,
+        exp: "¡Correcto! ElastiCache almacena resultados en memoria caché ultrarrápida, reduciendo drásticamente las consultas repetitivas de lectura a la base de datos."
+      },
+      {
+        q: "2. ¿Cómo se relaciona el Auto Scaling Group (ASG) con el pilar de Optimización de Costos del AWS Well-Architected Framework?",
+        opts: ["Permite eliminar servidores automáticamente cuando baja la demanda para no pagar de más", "Obliga a comprar instancias reservadas a 3 años obligatoriamente", "Elimina la necesidad de usar balanceadores de carga"],
+        ans: 0,
+        exp: "¡Exacto! El escalado horizontal dinámico (Scale-in) apaga recursos ociosos, cumpliendo el principio financiero de pagar únicamente por lo consumido."
+      },
+      {
+        q: "3. Una arquitectura empresarial recibe peticiones de procesamiento pesado que provocan caídas por saturación repentina. ¿Qué servicio desacopla la carga de forma asíncrona?",
+        opts: ["Amazon CloudFront", "Amazon SQS (Simple Queue Service)", "Amazon EBS (Elastic Block Store)"],
+        ans: 1,
+        exp: "¡Muy bien! SQS almacena los mensajes en una cola protegida para que los servidores los procesen a su propio ritmo sin perder peticiones."
+      },
+      {
+        q: "4. ¿Cuál es la diferencia principal entre escalar lecturas y escalar escrituras en una base de datos relacional (RDS)?",
+        opts: ["Las lecturas se escalan usando Read Replicas (réplicas de lectura); las escrituras requieren optimización de cómputo y motores distribuidos", "Las escrituras se escalan con CloudFront y las lecturas con SQS", "No existe ninguna diferencia arquitectónica"],
+        ans: 0,
+        exp: "¡Correcto! Las réplicas de lectura multiplican los puntos de consulta de datos leídos, mientras que la escritura principal recae en el nodo primario de RDS."
+      },
+      {
+        q: "5. ¿Qué combinación de servicios garantiza Alta Disponibilidad (HA) a nivel de infraestructura para cómputo web stateless?",
+        opts: ["Un solo servidor EC2 extragrande en una zona de disponibilidad", "Un Application Load Balancer distribuyendo tráfico entre múltiples instancias EC2 en al menos 2 AZs", "Un bucket S3 configurado como sitio estático"],
+        ans: 1,
+        exp: "¡Excelente! Distribuir instancias mediante un ALB en múltiples Zonas de Disponibilidad (AZs) previene caídas totales si un centro de datos falla."
+      },
+      {
+        q: "6. ¿Qué pilar del AWS Well-Architected Framework evalúa la capacidad de recuperar sistemas ante fallos de infraestructura y escalar automáticamente?",
+        opts: ["Sostenibilidad", "Fiabilidad (Reliability)", "Optimización de Costos"],
+        ans: 1,
+        exp: "¡Exacto! El pilar de Fiabilidad se enfoca en la tolerancia a fallos, recuperación ante desastres y diseño elástico."
+      },
+      {
+        q: "7. ¿Por qué se recomienda que las instancias EC2 detrás de un Auto Scaling Group sean stateless (sin estado local)?",
+        opts: ["Porque así se pueden añadir o eliminar servidores libremente sin perder datos críticos de usuario almacenados localmente", "Para que funcionen exclusivamente con sistemas operativos Windows", "Para reducir el costo de la red privada"],
+        ans: 0,
+        exp: "¡Muy bien! Si una instancia guarda archivos de usuario localmente y el ASG la apaga (scale-in), esos datos se perderían. Deben guardarse en S3 o RDS."
+      },
+      {
+        q: "8. ¿Qué servicio de entrega de contenido en la periferia (Edge Locations) acelera la entrega estática reduciendo la latencia global?",
+        opts: ["Amazon VPC", "Amazon CloudFront", "AWS IAM"],
+        ans: 1,
+        exp: "¡Correcto! CloudFront es la CDN de AWS que utiliza ubicaciones de borde globales para servir contenido estático cercano a los usuarios."
+      },
+      {
+        q: "9. Si una empresa necesita escalar operaciones de escritura masivas y predecibles en una base de datos NoSQL totalmente administrada, ¿qué servicio debe elegir?",
+        opts: ["Amazon DynamoDB con capacidad autogestionada o bajo demanda", "Amazon EBS con volúmenes magnetic", "AWS Storage Gateway"],
+        ans: 0,
+        exp: "¡Exacto! DynamoDB ofrece escalabilidad horizontal nativa y alto rendimiento en escrituras/lecturas NoSQL sin gestionar servidores de base de datos."
+      },
+      {
+        q: "10. ¿Cómo contribuye el uso de Auto Scaling al pilar de Excelencia Operativa?",
+        opts: ["Automatizando la respuesta ante cambios de carga sin intervención manual humana constante", "Evitando que el equipo de soporte revise correos electrónicos", "Configurando automáticamente las llaves de seguridad IAM"],
+        ans: 0,
+        exp: "¡Correcto! Automatizar el aprovisionamiento y reducción de recursos reduce errores humanos y optimiza las operaciones del sistema."
+      }
+    ];
+
+    let qIndex = 0;
+    let score = 0;
+    let qAnswered = false;
+    const quizBox = document.getElementById('quiz-box');
+
+    function renderQuestion() {
+      qAnswered = false;
+      if (qIndex >= questions.length) {
+        quizBox.innerHTML =
+          '<div class="score-box">' +
+            '<span class="badge">Resultado Final</span>' +
+            '<h2>¡Quiz Completado!</h2>' +
+            '<div class="score-num">' + score + ' / ' + questions.length + '</div>' +
+            '<p style="color:#cbd5e1; margin-bottom:20px;">' + (score === questions.length ? '¡Dominas la Escalabilidad y Arquitectura AWS! 🎉' : '¡Buen repaso! Puedes volver a intentarlo.') + '</p>' +
+            '<button type="button" class="nav-btn btn-next" style="width:100%" onclick="restartQuiz()">Volver a intentar 🔄</button>' +
+          '</div>';
+        return;
+      }
+
+      const item = questions[qIndex];
+      let optsHTML = '';
+      for (let i = 0; i < item.opts.length; i++) {
+        optsHTML += '<button type="button" class="opt-btn" onclick="checkAnswer(' + i + ', this)">' + item.opts[i] + '</button>';
+      }
+
+      quizBox.innerHTML =
+        '<span class="badge">Pregunta ' + (qIndex + 1) + ' de ' + questions.length + '</span>' +
+        '<div class="q-title">' + item.q + '</div>' +
+        '<div class="options">' + optsHTML + '</div>' +
+        '<div class="feedback" id="q-feedback">' + item.exp + '</div>' +
+        '<button type="button" class="quiz-next" id="q-next" onclick="nextQuestion()">Siguiente pregunta ➡️</button>';
+    }
+
+    function checkAnswer(selected, btn) {
+      if (qAnswered) return;
+      qAnswered = true;
+      const item = questions[qIndex];
+      const allBtns = document.querySelectorAll('.opt-btn');
+      for (let i = 0; i < allBtns.length; i++) {
+        allBtns[i].disabled = true;
+      }
+
+      if (selected === item.ans) {
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        allBtns[item.ans].classList.add('correct');
+      }
+
+      document.getElementById('q-feedback').style.display = 'block';
+      document.getElementById('q-next').style.display = 'block';
+    }
+
+    function nextQuestion() {
+      qIndex++;
+      renderQuestion();
+    }
+
+    function restartQuiz() {
+      qIndex = 0;
+      score = 0;
+      renderQuestion();
+    }
+  </script>
+
+  <a href="index.html" style="
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: #38bdf8;
+    color: #0f172a;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid #0f172a;
+  ">
+    🏠 Inicio
+  </a>
+</body>
+</html>
