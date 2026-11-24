@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>AWS IAM - Estudio y Quiz (CLF-C02)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; padding: 16px; }
+    
+    header { text-align: center; max-width: 460px; width: 100%; margin: 0 auto 12px; }
+    header h1 { font-size: 1.3rem; color: #38bdf8; margin-bottom: 12px; }
+    .tabs { display: flex; background: #1e293b; padding: 4px; border-radius: 12px; border: 1px solid #334155; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94a3b8; font-weight: bold; font-size: 0.95rem; border-radius: 9px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: #38bdf8; color: #0f172a; }
+
+    .view { display: none; flex: 1; flex-direction: column; max-width: 460px; width: 100%; margin: 0 auto; }
+    .view.active { display: flex; }
+
+    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 99px; margin: 8px 0 16px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #38bdf8; width: 16.6%; transition: width 0.3s ease; }
+    .slide-container { flex: 1; display: flex; align-items: center; }
+    .slide { background: #1e293b; border-radius: 20px; padding: 22px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: none; animation: fadeIn 0.25s ease; border: 1px solid #334155; }
+    .slide.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .badge { display: inline-block; background: #0284c7; color: #fff; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 99px; margin-bottom: 10px; text-transform: uppercase; }
+    .badge.green { background: #059669; }
+    h2 { font-size: 1.3rem; margin-bottom: 12px; color: #ffffff; }
+    ul { list-style: none; }
+    li { margin-bottom: 10px; font-size: 0.95rem; line-height: 1.45; color: #cbd5e1; padding-left: 16px; position: relative; }
+    li::before { content: "•"; color: #38bdf8; font-weight: bold; position: absolute; left: 0; }
+    strong { color: #f8fafc; }
+    .tip-box { background: #0f172a; border-left: 4px solid #38bdf8; padding: 12px; border-radius: 8px; margin-top: 14px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.4; }
+    .tip-box.green { border-left-color: #10b981; }
+    .controls { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+    .nav-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    .btn-prev { background: #334155; color: #f8fafc; }
+    .btn-next { background: #38bdf8; color: #0f172a; }
+    .nav-btn:disabled { opacity: 0.4; }
+    .counter { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 10px; }
+
+    .quiz-card { background: #1e293b; border-radius: 20px; padding: 22px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+    .q-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 16px; line-height: 1.4; color: #fff; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt-btn { width: 100%; text-align: left; padding: 14px; background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 12px; font-size: 0.94rem; cursor: pointer; transition: all 0.2s; }
+    .opt-btn.correct { background: #065f46; border-color: #10b981; color: #fff; font-weight: bold; }
+    .opt-btn.wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; }
+    .opt-btn:disabled { cursor: default; }
+    .feedback { margin-top: 14px; font-size: 0.9rem; padding: 12px; border-radius: 8px; display: none; background: #0f172a; color: #cbd5e1; line-height: 1.4; }
+    .quiz-next { width: 100%; margin-top: 16px; padding: 14px; background: #38bdf8; color: #0f172a; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; display: none; cursor: pointer; }
+    .score-box { text-align: center; padding: 20px 0; }
+    .score-num { font-size: 2.5rem; font-weight: bold; color: #38bdf8; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🛡️ AWS IAM (CLF-C02)</h1>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tab-slides" onclick="switchTab('slides')">📖 Diapositivas (6)</button>
+      <button type="button" class="tab-btn" id="tab-quiz" onclick="switchTab('quiz')">📝 Quiz (10)</button>
+    </div>
+  </header>
+
+  <section id="view-slides" class="view active">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="slide-container">
+      
+      <!-- Diapositiva 1 -->
+      <div class="slide active">
+        <span class="badge">Conceptos IAM</span>
+        <h2>¿Qué es AWS IAM?</h2>
+        <ul>
+          <li><strong>Identity and Access Management:</strong> Servicio global y fundamental de AWS.</li>
+          <li>Controla de forma segura <strong>quién</strong> (autenticación) y <strong>qué</strong> (autorización) puede acceder a los recursos.</li>
+          <li>Opera de manera <strong>global</strong> en toda la infraestructura de la nube de AWS.</li>
+        </ul>
+        <div class="tip-box">👑 <strong>Usuario Raíz (Root):</strong> El dueño absoluto de la cuenta. Nunca debe usarse para tareas diarias y requiere MFA.</div>
+      </div>
+
+      <!-- Diapositiva 2 -->
+      <div class="slide">
+        <span class="badge">Identidades</span>
+        <h2>Usuarios y Grupos IAM</h2>
+        <ul>
+          <li><strong>Usuarios IAM:</strong> Credenciales individuales para personas físicas o aplicaciones.</li>
+          <li><strong>Grupos IAM:</strong> Colección de usuarios que comparten permisos por departamentos (ej. Finanzas o Desarrollo).</li>
+          <li>Los grupos facilitan la administración masiva de accesos.</li>
+        </ul>
+        <div class="tip-box">👥 <strong>Nota clave:</strong> Un grupo IAM no puede contener otros grupos dentro de él.</div>
+      </div>
+
+      <!-- Diapositiva 3 -->
+      <div class="slide">
+        <span class="badge green">Permisos Avanzados</span>
+        <h2>Roles y Políticas JSON</h2>
+        <ul>
+          <li><strong>Roles IAM:</strong> Identidades temporales que se "prestan" a servicios o usuarios externos sin llaves fijas.</li>
+          <li><strong>Políticas JSON:</strong> Reglas estructuradas que determinan los permisos exactos.</li>
+          <li>Componentes clave: <code>Effect</code> (Allow/Deny), <code>Action</code> y <code>Resource</code>.</li>
+        </ul>
+        <div class="tip-box green">🛡️ <strong>Regla de oro:</strong> Un <code>Deny</code> explícito tiene precedencia absoluta sobre cualquier <code>Allow</code>.</div>
+      </div>
+
+      <!-- Diapositiva 4 -->
+      <div class="slide">
+        <span class="badge">Seguridad Clave</span>
+        <h2>Mejores Prácticas Obligatorias</h2>
+        <ul>
+          <li><strong>Mínimo Privilegio:</strong> Otorgar únicamente los permisos estrictamente necesarios para operar.</li>
+          <li><strong>MFA (Autenticación Multifactor):</strong> Añadir una capa extra de verificación física/digital.</li>
+          <li><strong>Rotación de Credenciales:</strong> Evitar claves estáticas incrustadas en código fuente.</li>
+        </ul>
+        <div class="tip-box">🔑 <strong>Objetivo CLF-C02:</strong> Minimizar la superficie de ataque en entornos corporativos.</div>
+      </div>
+
+      <!-- Diapositiva 5 -->
+      <div class="slide">
+        <span class="badge green">Caso Real 1</span>
+        <h2>Instancia EC2 leyendo S3 mediante Rol</h2>
+        <ul>
+          <li>1. Se crea un <strong>Rol IAM</strong> con permisos de solo lectura para Amazon S3.</li>
+          <li>2. Se define una relación de confianza exclusiva para el servicio EC2.</li>
+          <li>3. Se asigna el rol directamente al lanzar la máquina virtual EC2.</li>
+          <li>4. La aplicación obtiene credenciales temporales automáticas sin contraseñas en código.</li>
+        </ul>
+        <div class="tip-box green">🚀 <strong>Ventaja:</strong> Cero credenciales estáticas expuestas en archivos de configuración.</div>
+      </div>
+
+      <!-- Diapositiva 6 -->
+      <div class="slide">
+        <span class="badge">Caso Real 2</span>
+        <h2>Auditoría Externa y Raíz</h2>
+        <ul>
+          <li><strong>Acceso Temporal:</strong> Se asigna un Rol IAM con expiración automática (ej. 2 horas) a auditores externos.</li>
+          <li><strong>Protección Raíz:</strong> Se bloquea el acceso físico diario del usuario raíz tras configurar credenciales MFA.</li>
+        </ul>
+        <div class="tip-box">🔑 <strong>Resultado:</strong> Cumplimiento normativo y seguridad estricta sin accesos huérfanos.</div>
+      </div>
+
+    </div>
+
+    <div class="counter" id="counter">Diapositiva 1 de 6</div>
+    <div class="controls">
+      <button type="button" class="nav-btn btn-prev" id="prevBtn" onclick="changeSlide(-1)" disabled>⬅️ Anterior</button>
+      <button type="button" class="nav-btn btn-next" id="nextBtn" onclick="changeSlide(1)">Siguiente ➡️</button>
+    </div>
+  </section>
+
+  <section id="view-quiz" class="view">
+    <div class="quiz-card" id="quiz-box"></div>
+  </section>
+
+  <script>
+    function switchTab(tabName) {
+      document.getElementById('tab-slides').classList.remove('active');
+      document.getElementById('tab-quiz').classList.remove('active');
+      document.getElementById('view-slides').classList.remove('active');
+      document.getElementById('view-quiz').classList.remove('active');
+
+      document.getElementById('tab-' + tabName).classList.add('active');
+      document.getElementById('view-' + tabName).classList.add('active');
+
+      if (tabName === 'quiz' && qIndex === 0 && !qAnswered) {
+        renderQuestion();
+      }
+    }
+
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const progress = document.getElementById('progress');
+    const counter = document.getElementById('counter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlideUI() {
+      for (let i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === current);
+      }
+      progress.style.width = ((current + 1) / slides.length) * 100 + '%';
+      counter.textContent = 'Diapositiva ' + (current + 1) + ' de ' + slides.length;
+      prevBtn.disabled = current === 0;
+      nextBtn.textContent = current === slides.length - 1 ? 'Reiniciar 🔄' : 'Siguiente ➡️';
+    }
+
+    function changeSlide(dir) {
+      if (dir === 1 && current === slides.length - 1) {
+        current = 0;
+      } else {
+        current = Math.max(0, Math.min(slides.length - 1, current + dir));
+      }
+      updateSlideUI();
+    }
+
+    let touchStartX = 0;
+    const slideView = document.getElementById('view-slides');
+    slideView.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+    slideView.addEventListener('touchend', function(e) {
+      let touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) changeSlide(1);
+      if (touchEndX - touchStartX > 50) changeSlide(-1);
+    }, {passive: true});
+
+    const questions = [
+      {
+        q: "1. Una empresa necesita dar acceso temporal a una aplicación desplegada en Amazon EC2 para escribir en S3 sin incrustar claves estáticas. ¿Qué debe implementarse?",
+        opts: ["Un Usuario IAM con permisos completos", "Un Rol IAM asignado a la instancia EC2", "El Usuario Raíz configurado con MFA"],
+        ans: 1,
+        exp: "¡Correcto! Los roles IAM entregan credenciales temporales que rotan automáticamente y son el mecanismo nativo y seguro entre servicios de AWS."
+      },
+      {
+        q: "2. ¿Cuál de las siguientes afirmaciones describe correctamente el alcance de AWS IAM?",
+        opts: ["Es un servicio exclusivo de la región Virginia del Norte", "Es un servicio estrictamente zonal", "Es un servicio global de AWS"],
+        ans: 2,
+        exp: "¡Exacto! IAM opera a nivel global en la infraestructura de AWS, permitiendo administrar identidades sin importar la región."
+      },
+      {
+        q: "3. ¿Qué principio de seguridad recomienda asignar únicamente los permisos justos para realizar labores?",
+        opts: ["Principio de Alta Disponibilidad", "Principio de Mínimo Privilegio", "Principio de Despliegue Elástico"],
+        ans: 1,
+        exp: "¡Muy bien! El principio de mínimo privilegio reduce la superficie de ataque limitando las acciones permitidas al mínimo indispensable."
+      },
+      {
+        q: "4. ¿Qué tecnología añade una capa adicional de seguridad física o digital además de la contraseña?",
+        opts: ["IAM Roles", "AWS Shield", "MFA (Autenticación Multifactor)"],
+        ans: 2,
+        exp: "¡Correcto! MFA exige un código temporal generado por un dispositivo externo o aplicación autenticadora."
+      },
+      {
+        q: "5. En una política JSON de IAM, ¿qué efecto tiene una declaración explícita con Deny frente a Allow?",
+        opts: ["El Allow siempre prevalece sobre el Deny", "El Deny explícito tiene precedencia absoluta y bloquea la acción", "Ambas se anulan mutuamente"],
+        ans: 1,
+        exp: "¡Así es! Por diseño de seguridad en AWS, cualquier regla de denegación explícita anula cualquier permiso de autorización."
+      },
+      {
+        q: "6. ¿Cuál es la recomendación principal respecto al uso del Usuario Raíz de la cuenta de AWS?",
+        opts: ["Compartirlo con todo el equipo de desarrollo", "Protegerlo con MFA y reservarlo solo para tareas críticas iniciales", "Usarlo diariamente para crear instancias EC2"],
+        ans: 1,
+        exp: "¡Exacto! El usuario raíz posee control absoluto; usarlo en el día a día representa un riesgo severo de seguridad."
+      },
+      {
+        q: "7. Si cuentas con 10 analistas que necesitan exactamente los mismos permisos de lectura, ¿cómo se deben organizar en IAM?",
+        opts: ["Creando un rol independiente para cada uno", "Agrupándolos en un Grupo IAM y asignando la política al grupo", "Usando las credenciales del usuario raíz"],
+        ans: 1,
+        exp: "¡Correcto! Los grupos IAM permiten administrar y escalar políticas de permisos eficientemente para conjuntos de usuarios con funciones idénticas."
+      },
+      {
+        q: "8. ¿Qué componente de una política JSON de IAM define las operaciones específicas permitidas o denegadas?",
+        opts: ["Resource", "Action", "Effect"],
+        ans: 1,
+        exp: "¡Muy bien! La propiedad Action especifica las llamadas a la API permitidas (ej. s3:PutObject)."
+      },
+      {
+        q: "9. Un consultor externo necesita conectarse a los recursos de AWS por un tiempo limitado de 2 horas. ¿Qué estructura es la idónea?",
+        opts: ["Utilizar un Rol IAM con credenciales temporales de expiración configurada", "Crear un usuario permanente y borrarlo a las 2 horas", "Compartir la contraseña del usuario raíz"],
+        ans: 0,
+        exp: "¡Exacto! Los roles soportan credenciales temporales que caducan automáticamente tras el periodo establecido."
+      },
+      {
+        q: "10. ¿Cuál entidad en IAM no representa una identidad con contraseña propia, sino que otorga permisos temporales?",
+        opts: ["Usuario IAM", "Grupo IAM", "Rol IAM"],
+        ans: 2,
+        exp: "¡Excelente! Un rol IAM no tiene credenciales de larga duración asociadas de forma fija a un humano; se asume temporalmente."
+      }
+    ];
+
+    let qIndex = 0;
+    let score = 0;
+    let qAnswered = false;
+    const quizBox = document.getElementById('quiz-box');
+
+    function renderQuestion() {
+      qAnswered = false;
+      if (qIndex >= questions.length) {
+        quizBox.innerHTML =
+          '<div class="score-box">' +
+            '<span class="badge">Resultado Final</span>' +
+            '<h2>¡Quiz Completado!</h2>' +
+            '<div class="score-num">' + score + ' / ' + questions.length + '</div>' +
+            '<p style="color:#cbd5e1; margin-bottom:20px;">' + (score === questions.length ? '¡Dominas la teoría y los escenarios de IAM! 🎉' : '¡Buen repaso! Puedes volver a intentarlo.') + '</p>' +
+            '<button type="button" class="nav-btn btn-next" style="width:100%" onclick="restartQuiz()">Volver a intentar 🔄</button>' +
+          '</div>';
+        return;
+      }
+
+      const item = questions[qIndex];
+      let optsHTML = '';
+      for (let i = 0; i < item.opts.length; i++) {
+        optsHTML += '<button type="button" class="opt-btn" onclick="checkAnswer(' + i + ', this)">' + item.opts[i] + '</button>';
+      }
+
+      quizBox.innerHTML =
+        '<span class="badge">Pregunta ' + (qIndex + 1) + ' de ' + questions.length + '</span>' +
+        '<div class="q-title">' + item.q + '</div>' +
+        '<div class="options">' + optsHTML + '</div>' +
+        '<div class="feedback" id="q-feedback">' + item.exp + '</div>' +
+        '<button type="button" class="quiz-next" id="q-next" onclick="nextQuestion()">Siguiente pregunta ➡️</button>';
+    }
+
+    function checkAnswer(selected, btn) {
+      if (qAnswered) return;
+      qAnswered = true;
+      const item = questions[qIndex];
+      const allBtns = document.querySelectorAll('.opt-btn');
+      for (let i = 0; i < allBtns.length; i++) {
+        allBtns[i].disabled = true;
+      }
+
+      if (selected === item.ans) {
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        allBtns[item.ans].classList.add('correct');
+      }
+
+      document.getElementById('q-feedback').style.display = 'block';
+      document.getElementById('q-next').style.display = 'block';
+    }
+
+    function nextQuestion() {
+      qIndex++;
+      renderQuestion();
+    }
+
+    function restartQuiz() {
+      qIndex = 0;
+      score = 0;
+      renderQuestion();
+    }
+  </script>
+
+  <a href="index.html" style="
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: #38bdf8;
+    color: #0f172a;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid #0f172a;
+  ">
+    🏠 Inicio
+  </a>
+</body>
+</html>

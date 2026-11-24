@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Responsabilidad Compartida - Estudio y Quiz (CLF-C02)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; padding: 16px; }
+    
+    header { text-align: center; max-width: 460px; width: 100%; margin: 0 auto 12px; }
+    header h1 { font-size: 1.2rem; color: #38bdf8; margin-bottom: 12px; }
+    .tabs { display: flex; background: #1e293b; padding: 4px; border-radius: 12px; border: 1px solid #334155; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94a3b8; font-weight: bold; font-size: 0.95rem; border-radius: 9px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: #38bdf8; color: #0f172a; }
+
+    .view { display: none; flex: 1; flex-direction: column; max-width: 460px; width: 100%; margin: 0 auto; }
+    .view.active { display: flex; }
+
+    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 99px; margin: 8px 0 16px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #38bdf8; width: 16.6%; transition: width 0.3s ease; }
+    .slide-container { flex: 1; display: flex; align-items: center; }
+    .slide { background: #1e293b; border-radius: 20px; padding: 22px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: none; animation: fadeIn 0.25s ease; border: 1px solid #334155; }
+    .slide.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .badge { display: inline-block; background: #0284c7; color: #fff; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 99px; margin-bottom: 10px; text-transform: uppercase; }
+    .badge.green { background: #059669; }
+    h2 { font-size: 1.2rem; margin-bottom: 12px; color: #ffffff; }
+    ul { list-style: none; }
+    li { margin-bottom: 10px; font-size: 0.92rem; line-height: 1.45; color: #cbd5e1; padding-left: 16px; position: relative; }
+    li::before { content: "•"; color: #38bdf8; font-weight: bold; position: absolute; left: 0; }
+    strong { color: #f8fafc; }
+    .tip-box { background: #0f172a; border-left: 4px solid #38bdf8; padding: 12px; border-radius: 8px; margin-top: 14px; font-size: 0.85rem; color: #e2e8f0; line-height: 1.4; }
+    .tip-box.green { border-left-color: #10b981; }
+    .controls { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+    .nav-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    .btn-prev { background: #334155; color: #f8fafc; }
+    .btn-next { background: #38bdf8; color: #0f172a; }
+    .nav-btn:disabled { opacity: 0.4; }
+    .counter { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 10px; }
+
+    .quiz-card { background: #1e293b; border-radius: 20px; padding: 22px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+    .q-title { font-size: 1.05rem; font-weight: bold; margin-bottom: 16px; line-height: 1.4; color: #fff; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt-btn { width: 100%; text-align: left; padding: 14px; background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 12px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
+    .opt-btn.correct { background: #065f46; border-color: #10b981; color: #fff; font-weight: bold; }
+    .opt-btn.wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; }
+    .opt-btn:disabled { cursor: default; }
+    .feedback { margin-top: 14px; font-size: 0.88rem; padding: 12px; border-radius: 8px; display: none; background: #0f172a; color: #cbd5e1; line-height: 1.4; }
+    .quiz-next { width: 100%; margin-top: 16px; padding: 14px; background: #38bdf8; color: #0f172a; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; display: none; cursor: pointer; }
+    .score-box { text-align: center; padding: 20px 0; }
+    .score-num { font-size: 2.5rem; font-weight: bold; color: #38bdf8; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🛡️ Modelo de Responsabilidad Compartida</h1>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tab-slides" onclick="switchTab('slides')">📖 Diapositivas (5)</button>
+      <button type="button" class="tab-btn" id="tab-quiz" onclick="switchTab('quiz')">📝 Quiz (10)</button>
+    </div>
+  </header>
+
+  <section id="view-slides" class="view active">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="slide-container">
+      
+      <!-- Diapositiva 1 -->
+      <div class="slide active">
+        <span class="badge">Concepto Clave</span>
+        <h2>¿Qué es la Responsabilidad Compartida?</h2>
+        <ul>
+          <li>Es el principio fundamental de seguridad en AWS que divide las cargas operativas.</li>
+          <li><strong>AWS</strong> es responsable de la seguridad <strong>DE</strong> la nube.</li>
+          <li>El <strong>Cliente</strong> es responsable de la seguridad <strong>EN</strong> la nube.</li>
+        </ul>
+        <div class="tip-box">💡 <strong>Analogía del Edificio:</strong> El arrendador (AWS) cuida las paredes, tuberías y estructura física; tú (Cliente) aseguras tus cerraduras, muebles y quién entra a tu oficina.</div>
+      </div>
+
+      <!-- Diapositiva 2 -->
+      <div class="slide">
+        <span class="badge green">Seguridad DE la Nube</span>
+        <h2>Lo que administra AWS (Infraestructura)</h2>
+        <ul>
+          <li><strong>Hardware y Cómputo:</strong> Servidores físicos, procesadores y centros de datos globales.</li>
+          <li><strong>Redes y Almacenamiento:</strong> Infraestructura de fibra, switches y discos físicos de almacenamiento.</li>
+          <li><strong>Virtualización:</strong> El hipervisor que aísla las máquinas virtuales de los clientes.</li>
+        </ul>
+        <div class="tip-box green">🏢 <strong>Enfoque:</strong> AWS protege la infraestructura global que soporta todos los servicios.</div>
+      </div>
+
+      <!-- Diapositiva 3 -->
+      <div class="slide">
+        <span class="badge">Seguridad EN la Nube</span>
+        <h2>Lo que administra el Cliente (Tus Datos)</h2>
+        <ul>
+          <li><strong>Datos del Cliente:</strong> La información que subes, procesas y almacenas.</li>
+          <li><strong>Sistemas Operativos:</strong> Parches, actualizaciones y configuración de seguridad en instancias EC2.</li>
+          <li><strong>Redes y Firewall:</strong> Configuración de grupos de seguridad y listas de control de acceso (ACLs).</li>
+          <li><strong>Identidades (IAM):</strong> Creación de usuarios, contraseñas y permisos.</li>
+        </ul>
+        <div class="tip-box">🔑 <strong>Regla de oro:</strong> Si usas IaaS (como EC2), tú eres dueño de casi todo el software; si usas SaaS, AWS asume más control.</div>
+      </div>
+
+      <!-- Diapositiva 4 -->
+      <div class="slide">
+        <span class="badge green">Casos Prácticos</span>
+        <h2>Ejemplos del Examen (CLF-C02)</h2>
+        <ul>
+          <li><strong>Parches del hipervisor:</strong> Responsabilidad de <strong>AWS</strong>.</li>
+          <li><strong>Parches del S.O. Linux en un servidor EC2:</strong> Responsabilidad del <strong>Cliente</strong>.</li>
+          <li><strong>Cifrado de datos en reposo en S3 (Client-side):</strong> Responsabilidad del <strong>Cliente</strong>.</li>
+          <li><strong>Seguridad física de los centros de datos:</strong> Responsabilidad de <strong>AWS</strong>.</li>
+        </ul>
+        <div class="tip-box green">🛠️ <strong>Tip:</strong> Pregúntate siempre si el recurso es físico (AWS) o lógico/configurado por software (Cliente).</div>
+      </div>
+
+      <!-- Diapositiva 5 -->
+      <div class="slide">
+        <span class="badge">Heredado vs Compartido</span>
+        <h2>Servicios Heredados y Abstractos</h2>
+        <ul>
+          <li><strong>Servicios абстраctos (Ej. S3, DynamoDB):</strong> AWS administra el S.O. y la infraestructura de almacenamiento. El cliente solo gestiona los datos y permisos de acceso.</li>
+          <li><strong>Seguridad global:</strong> AWS cumple con normativas internacionales (ISO, PCI-DSS) protegiendo la base física.</li>
+        </ul>
+        <div class="tip-box">🎯 <strong>Conclusión:</strong> A mayor abstracción del servicio (como bases de datos administradas), menor es la carga operativa de seguridad para el cliente.</div>
+      </div>
+
+    </div>
+
+    <div class="counter" id="counter">Diapositiva 1 de 5</div>
+    <div class="controls">
+      <button type="button" class="nav-btn btn-prev" id="prevBtn" onclick="changeSlide(-1)" disabled>⬅️ Anterior</button>
+      <button type="button" class="nav-btn btn-next" id="nextBtn" onclick="changeSlide(1)">Siguiente ➡️</button>
+    </div>
+  </section>
+
+  <section id="view-quiz" class="view">
+    <div class="quiz-card" id="quiz-box"></div>
+  </section>
+
+  <script>
+    function switchTab(tabName) {
+      document.getElementById('tab-slides').classList.remove('active');
+      document.getElementById('tab-quiz').classList.remove('active');
+      document.getElementById('view-slides').classList.remove('active');
+      document.getElementById('view-quiz').classList.remove('active');
+
+      document.getElementById('tab-' + tabName).classList.add('active');
+      document.getElementById('view-' + tabName).classList.add('active');
+
+      if (tabName === 'quiz' && qIndex === 0 && !qAnswered) {
+        renderQuestion();
+      }
+    }
+
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const progress = document.getElementById('progress');
+    const counter = document.getElementById('counter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlideUI() {
+      for (let i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === current);
+      }
+      progress.style.width = ((current + 1) / slides.length) * 100 + '%';
+      counter.textContent = 'Diapositiva ' + (current + 1) + ' de ' + slides.length;
+      prevBtn.disabled = current === 0;
+      nextBtn.textContent = current === slides.length - 1 ? 'Reiniciar 🔄' : 'Siguiente ➡️';
+    }
+
+    function changeSlide(dir) {
+      if (dir === 1 && current === slides.length - 1) {
+        current = 0;
+      } else {
+        current = Math.max(0, Math.min(slides.length - 1, current + dir));
+      }
+      updateSlideUI();
+    }
+
+    let touchStartX = 0;
+    const slideView = document.getElementById('view-slides');
+    slideView.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+    slideView.addEventListener('touchend', function(e) {
+      let touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) changeSlide(1);
+      if (touchEndX - touchStartX > 50) changeSlide(-1);
+    }, {passive: true});
+
+    const questions = [
+      {
+        q: "1. Según el modelo de responsabilidad compartida de AWS, ¿de qué es responsable AWS?",
+        opts: ["De la seguridad del sistema operativo en las instancias EC2", "De la seguridad física de los centros de datos globales", "De la configuración de los permisos de los usuarios IAM"],
+        ans: 1,
+        exp: "¡Correcto! AWS es responsable de la infraestructura subyacente, incluyendo el hardware, los centros de datos y la seguridad física de los mismos."
+      },
+      {
+        q: "2. Una empresa despliega una máquina virtual en Amazon EC2. ¿Quién es responsable de aplicar los parches de seguridad al sistema operativo invitado?",
+        opts: ["AWS de forma automática", "El Cliente", "El fabricante del procesador físico"],
+        ans: 1,
+        exp: "¡Exacto! En servicios IaaS como EC2, el cliente administra el sistema operativo y sus actualizaciones de seguridad."
+      },
+      {
+        q: "3. ¿Cuál de las siguientes tareas corresponde exclusivamente a la responsabilidad de AWS en la nube?",
+        opts: ["El cifrado de datos confidenciales del negocio almacenados en S3", "El mantenimiento del hipervisor de virtualización", "La gestión de contraseñas de los empleados"],
+        ans: 1,
+        exp: "¡Muy bien! El mantenimiento y control del hipervisor que aísla los recursos virtuales pertenece a la seguridad DE la nube (AWS)."
+      },
+      {
+        q: "4. Si un cliente utiliza bases de datos administradas (como Amazon RDS), ¿cuál es la responsabilidad de AWS en comparación con bases de datos tradicionales?",
+        opts: ["AWS administra los parches del S.O. y el motor de base de datos", "AWS se encarga de escribir las consultas SQL del negocio", "El cliente se encarga de reparar los discos duros físicos"],
+        ans: 0,
+        exp: "¡Correcto! En servicios administrados, AWS asume una mayor responsabilidad operativa, incluyendo parches del motor y del S.O."
+      },
+      {
+        q: "5. ¿Cómo se define formalmente la división de tareas en el modelo de AWS?",
+        opts: ["AWS protege el hardware y el cliente protege sus datos", "El cliente es responsable de todo el hardware y AWS del software", "Ambos comparten 50/50 exactamente todas las tareas por igual"],
+        ans: 0,
+        exp: "¡Así es! AWS asegura la nube (hardware/infraestructura) y el cliente asegura lo que pone en la nube (datos, aplicaciones y configuraciones)."
+      },
+      {
+        q: "6. ¿Quién es responsable de configurar las reglas de los Grupos de Seguridad (Security Groups) y firewalls virtuales en AWS?",
+        opts: ["El equipo de ingeniería de red de AWS", "El Cliente", "El sistema automatizado de IA de AWS"],
+        ans: 1,
+        exp: "¡Exacto! La configuración de redes virtuales, firewalls y control de tráfico corresponde enteramente al cliente."
+      },
+      {
+        q: "7. ¿Qué aspecto de la seguridad de Amazon S3 gestiona por completo AWS?",
+        opts: ["Decidir qué archivos públicos o privados se suben al bucket", "La durabilidad física y protección de los dispositivos de almacenamiento subyacentes", "El cifrado mediante claves administradas por el usuario"],
+        ans: 1,
+        exp: "¡Correcto! AWS garantiza la durabilidad e integridad física del hardware de almacenamiento; los permisos y datos son responsabilidad del cliente."
+      },
+      {
+        q: "8. ¿Cuál de las siguientes afirmaciones describe mejor la frase 'Seguridad en la nube'?",
+        opts: ["Lo que AWS hace para proteger sus regiones geográficas", "La responsabilidad que asume el cliente sobre sus aplicaciones y configuraciones de acceso", "Las leyes de cumplimiento internacional que rigen los servidores"],
+        ans: 1,
+        exp: "¡Muy bien! 'Seguridad en la nube' se refiere a los elementos que el cliente gestiona, como datos, identidades y sistemas operativos."
+      },
+      {
+        q: "9. Si una auditoría exige verificar que las instalaciones físicas de servidores tienen control biométrico de acceso, ¿a quién le corresponde cumplirlo?",
+        opts: ["A AWS", "Al Cliente de la cuenta de AWS", "Al proveedor de internet local"],
+        ans: 0,
+        exp: "¡Correcto! La seguridad física de los centros de datos globales está completamente a cargo de AWS."
+      },
+      {
+        q: "10. ¿Por qué es importante entender el modelo de responsabilidad compartida para el examen CLF-C02?",
+        opts: ["Para saber exactamente qué tareas de seguridad no puedes delegar al proveedor", "Porque permite modificar el hardware de los servidores de AWS", "Para evitar pagar por los servicios de cómputo"],
+        ans: 0,
+        exp: "¡Exacto! Permite identificar claramente los límites operativos y saber qué componentes debe asegurar el cliente en su arquitectura."
+      }
+    ];
+
+    let qIndex = 0;
+    let score = 0;
+    let qAnswered = false;
+    const quizBox = document.getElementById('quiz-box');
+
+    function renderQuestion() {
+      qAnswered = false;
+      if (qIndex >= questions.length) {
+        quizBox.innerHTML =
+          '<div class="score-box">' +
+            '<span class="badge">Resultado Final</span>' +
+            '<h2>¡Quiz Completado!</h2>' +
+            '<div class="score-num">' + score + ' / ' + questions.length + '</div>' +
+            '<p style="color:#cbd5e1; margin-bottom:20px;">' + (score === questions.length ? '¡Dominas el Modelo de Responsabilidad Compartida! 🎉' : '¡Buen repaso! Puedes volver a intentarlo.') + '</p>' +
+            '<button type="button" class="nav-btn btn-next" style="width:100%" onclick="restartQuiz()">Volver a intentar 🔄</button>' +
+          '</div>';
+        return;
+      }
+
+      const item = questions[qIndex];
+      let optsHTML = '';
+      for (let i = 0; i < item.opts.length; i++) {
+        optsHTML += '<button type="button" class="opt-btn" onclick="checkAnswer(' + i + ', this)">' + item.opts[i] + '</button>';
+      }
+
+      quizBox.innerHTML =
+        '<span class="badge">Pregunta ' + (qIndex + 1) + ' de ' + questions.length + '</span>' +
+        '<div class="q-title">' + item.q + '</div>' +
+        '<div class="options">' + optsHTML + '</div>' +
+        '<div class="feedback" id="q-feedback">' + item.exp + '</div>' +
+        '<button type="button" class="quiz-next" id="q-next" onclick="nextQuestion()">Siguiente pregunta ➡️</button>';
+    }
+
+    function checkAnswer(selected, btn) {
+      if (qAnswered) return;
+      qAnswered = true;
+      const item = questions[qIndex];
+      const allBtns = document.querySelectorAll('.opt-btn');
+      for (let i = 0; i < allBtns.length; i++) {
+        allBtns[i].disabled = true;
+      }
+
+      if (selected === item.ans) {
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        allBtns[item.ans].classList.add('correct');
+      }
+
+      document.getElementById('q-feedback').style.display = 'block';
+      document.getElementById('q-next').style.display = 'block';
+    }
+
+    function nextQuestion() {
+      qIndex++;
+      renderQuestion();
+    }
+
+    function restartQuiz() {
+      qIndex = 0;
+      score = 0;
+      renderQuestion();
+    }
+  </script>
+
+  <a href="index.html" style="
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: #38bdf8;
+    color: #0f172a;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid #0f172a;
+  ">
+    🏠 Inicio
+  </a>
+</body>
+</html>
